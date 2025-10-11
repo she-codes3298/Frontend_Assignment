@@ -11,10 +11,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import './DeveloperDashboard.css'
+
 export default function DeveloperDashboard({ user, onLogout }) {
   const [tasks, setTasks] = useState([]);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [sortBy, setSortBy] = useState('date')
 
   useEffect(() => {
     seedIfEmpty();
@@ -24,7 +28,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
   useEffect(() => saveTasks(tasks), [tasks]);
 
   function handleCreate(data) {
-    const t = createTask({ ...data, assignee: data.assignee || user.username });
+    const t = createTask({ ...data, assignee: data.assignee || user.username, createdBy: user.username });
     setTasks((s) => [t, ...s]);
     setCreating(false);
   }
@@ -44,14 +48,11 @@ export default function DeveloperDashboard({ user, onLogout }) {
     setTasks((s) => s.filter((t) => t.id !== id));
   }
 
-  function myTasks() {
-    return tasks.filter(
-      (t) =>
-        t.assignee === user.username ||
-        t.createdBy === user.username ||
-        t.assignee === null
-    );
+  function handleClose(id) {
+    setTasks(s => s.map(t => t.id === id ? { ...t, status: 'Pending Approval', pendingApproval: true, updatedAt: new Date().toISOString() } : t))
   }
+
+  // removed helper; filtering done inline when rendering
 
   const chartData = useMemo(() => {
     const map = {};
@@ -82,7 +83,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
   );
 
   return (
-    <div className="container">
+    <div className="container dev-dashboard">
       <header className="app-header">
         <div>
           <h2>Welcome, {user.username}</h2>
@@ -103,7 +104,22 @@ export default function DeveloperDashboard({ user, onLogout }) {
           style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}
         >
           <section>
-            <h3>Your Tasks</h3>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
+              <h3 style={{margin:0}}>Your Tasks</h3>
+              <div className="filter-bar">
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                  <option value="All">All</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                  <option value="date">Sort: Date</option>
+                  <option value="priority">Sort: Priority</option>
+                </select>
+              </div>
+            </div>
             {creating && (
               <TaskForm
                 users={users}
@@ -119,15 +135,22 @@ export default function DeveloperDashboard({ user, onLogout }) {
                 onSave={handleUpdate}
               />
             )}
-            {myTasks().map((t) => (
-              <TaskCard
-                key={t.id}
-                task={t}
-                onEdit={(task) => setEditing(task)}
-                onDelete={handleDelete}
-                isManager={false}
-              />
-            ))}
+                    {(() => {
+                      let list = tasks.filter(t => t.assignee === user.username || t.createdBy === user.username || t.assignee === null)
+                      if (statusFilter !== 'All') {
+                        if (statusFilter === 'Pending') list = list.filter(t => t.status === 'Pending Approval')
+                        else list = list.filter(t => t.status === statusFilter)
+                      }
+                      if (sortBy === 'priority') {
+                        const order = { High: 0, Medium: 1, Low: 2 }
+                        list = list.sort((a,b) => (order[a.priority] - order[b.priority]))
+                      } else {
+                        list = list.sort((a,b) => new Date(b.startDate || b.createdAt) - new Date(a.startDate || a.createdAt))
+                      }
+                      return list.map(t => (
+                        <TaskCard key={t.id} task={t} onEdit={task => setEditing(task)} onDelete={handleDelete} onClose={handleClose} isManager={false} currentUser={user.username} />
+                      ))
+                    })()}
           </section>
 
           <aside>

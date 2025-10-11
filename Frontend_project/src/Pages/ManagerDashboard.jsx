@@ -39,6 +39,10 @@ export default function ManagerDashboard({ user, onLogout }) {
     );
   }
 
+  function handleReopen(id) {
+    setTasks(s => s.map(t => t.id === id ? { ...t, status: 'Open', updatedAt: new Date().toISOString() } : t))
+  }
+
   const chartData = useMemo(() => {
     const map = {};
     tasks.forEach((t) => {
@@ -73,14 +77,7 @@ export default function ManagerDashboard({ user, onLogout }) {
           <section>
             <h3>All Tasks</h3>
             {tasks.map((t) => (
-              <TaskCard
-                key={t.id}
-                task={t}
-                onEdit={() => {}}
-                onDelete={handleDelete}
-                onApprove={handleApprove}
-                isManager={true}
-              />
+              <TaskCard key={t.id} task={t} onEdit={() => {}} onDelete={handleDelete} onApprove={handleApprove} onReopen={handleReopen} isManager={true} currentUser={user.username} />
             ))}
           </section>
 

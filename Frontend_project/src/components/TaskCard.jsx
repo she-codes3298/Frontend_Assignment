@@ -3,24 +3,30 @@ export default function TaskCard({
   onEdit,
   onDelete,
   onApprove,
+  onClose,
+  onReopen,
   isManager,
+  currentUser,
 }) {
+  if (!task) return null;
+
   return (
-    <div className="card" style={{ marginBottom: 12 }}>
+    <div className="card task-card" style={{ marginBottom: 12 }}>
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+        style={{ display: "flex", justifyContent: "space-between", gap: 12 }}
       >
-        <div>
+        <div style={{ flex: 1 }}>
           <h4 style={{ margin: "0 0 6px 0" }}>{task.title}</h4>
           <div style={{ color: "var(--muted)", fontSize: 13 }}>
             {task.description}
           </div>
+          <div className="task-meta" style={{ marginTop: 8 }}>
+            Start: {task.startDate ? task.startDate.slice(0, 10) : "—"} • Due:{" "}
+            {task.dueDate ? task.dueDate.slice(0, 10) : "—"}
+          </div>
         </div>
-        <div style={{ textAlign: "right" }}>
+
+        <div style={{ width: 120, textAlign: "right" }}>
           <div style={{ fontWeight: 700, color: "var(--accent)" }}>
             {task.priority}
           </div>
@@ -38,25 +44,50 @@ export default function TaskCard({
       <div
         style={{
           display: "flex",
-          gap: 8,
-          marginTop: 12,
-          alignItems: "center",
           justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 12,
         }}
       >
-        <div style={{ fontSize: 13, color: "var(--muted)" }}>
+        <div style={{ color: "var(--muted)" }}>
           Assignee: {task.assignee || "(unassigned)"}
+          {task.createdBy ? ` • Created by ${task.createdBy}` : ""}
         </div>
+
         <div style={{ display: "flex", gap: 8 }}>
           {isManager && task.status === "Pending Approval" && (
-            <button className="btn" onClick={() => onApprove(task.id)}>
+            <button
+              className="btn"
+              onClick={() => onApprove && onApprove(task.id)}
+            >
               Approve
             </button>
           )}
-          <button className="btn" onClick={() => onEdit(task)}>
+
+          {isManager && task.status === "Closed" && (
+            <button
+              className="btn"
+              onClick={() => onReopen && onReopen(task.id)}
+            >
+              Reopen
+            </button>
+          )}
+
+          {!isManager &&
+            task.status !== "Closed" &&
+            currentUser === task.assignee && (
+              <button
+                className="btn"
+                onClick={() => onClose && onClose(task.id)}
+              >
+                Close
+              </button>
+            )}
+
+          <button className="btn" onClick={() => onEdit && onEdit(task)}>
             Edit
           </button>
-          <button className="btn" onClick={() => onDelete(task.id)}>
+          <button className="btn" onClick={() => onDelete && onDelete(task.id)}>
             Delete
           </button>
         </div>
