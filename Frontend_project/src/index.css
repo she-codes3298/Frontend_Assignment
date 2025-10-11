@@ -169,3 +169,12 @@ button:focus-visible {
   padding: 16px;
   border-radius: 8px;
 }
+
+.container {
+  padding: 12px 0;
+}
+
+section h3,
+aside h3 {
+  margin-top: 0;
+}

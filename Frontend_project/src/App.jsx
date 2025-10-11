@@ -41,7 +41,7 @@ export default function App() {
   }
 
   return (
-    <div className={`app-root ${user ? '' : 'auth-center'}`}>
+    <div className={`app-root ${user ? "" : "auth-center"}`}>
       {user ? (
         <Dashboard user={user} onLogout={handleLogout} />
       ) : (
