@@ -28,10 +28,11 @@ export default function DeveloperDashboard({ user, onLogout }) {
     seedIfEmpty();
     const loadedTasks = loadTasks();
     setTasks(loadedTasks);
+    // Initialize the count without showing notification
     previousTaskCount.current = loadedTasks.filter(
       (t) => t.assignee === user.username
     ).length;
-  }, []);
+  }, [user.username]);
 
   // keep in sync across tabs/windows: reload tasks when localStorage changes
   useEffect(() => {
@@ -42,14 +43,19 @@ export default function DeveloperDashboard({ user, onLogout }) {
         const myNewTasks = newTasks.filter((t) => t.assignee === user.username);
         const currentCount = myNewTasks.length;
         
-        // Check if a new task was assigned to this user
+        // Check if a new task was manually assigned to this user by a manager
         if (currentCount > previousTaskCount.current) {
-          const latestTask = myNewTasks.sort(
+          // Find the newest task
+          const sortedTasks = myNewTasks.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          )[0];
+          );
+          const latestTask = sortedTasks[0];
           
-          setNewTaskDetails(latestTask);
-          setShowNotification(true);
+          // Only show notification if it was manually assigned by manager
+          if (latestTask && latestTask.manuallyAssigned && latestTask.createdBy !== user.username) {
+            setNewTaskDetails(latestTask);
+            setShowNotification(true);
+          }
         }
         
         previousTaskCount.current = currentCount;
@@ -235,6 +241,8 @@ export default function DeveloperDashboard({ user, onLogout }) {
           justifyContent: "center",
           alignItems: "center",
           zIndex: 2000,
+          padding: "20px",
+          overflowY: "auto",
         }}>
           <div className="card" style={{
             width: "90%",
@@ -242,6 +250,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
             padding: "24px",
             textAlign: "center",
             border: "3px solid var(--accent)",
+            margin: "auto",
           }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🎯</div>
             <h2 style={{ marginBottom: "16px", color: "var(--accent)" }}>

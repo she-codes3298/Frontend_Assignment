@@ -112,8 +112,8 @@ export default function ManagerDashboard({ user, onLogout }) {
     if (startDate && dueDate) {
       const start = new Date(startDate);
       const due = new Date(dueDate);
-      if (due < start) {
-        return "Due date cannot be before start date";
+      if (start > due) {
+        return "Start date cannot be after due date";
       }
     }
     
@@ -160,9 +160,16 @@ export default function ManagerDashboard({ user, onLogout }) {
       createdBy: user.username,
       priority: formData.priority,
       status: "Open",
+      manuallyAssigned: true, // Flag to indicate manual assignment by manager
+      assignedAt: new Date().toISOString(), // Timestamp for tracking
     });
 
     setTasks(prev => [newTask, ...prev]);
+    
+    // Trigger a custom event for notification across tabs
+    window.dispatchEvent(new CustomEvent('taskAssigned', { 
+      detail: { task: newTask }
+    }));
     
     // Reset form
     setFormData({
@@ -221,7 +228,7 @@ export default function ManagerDashboard({ user, onLogout }) {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn" onClick={() => setShowAssignForm(true)}>
-             New Assignment
+            Assign New Task
           </button>
           <button className="btn" onClick={onLogout}>
             Logout
@@ -242,12 +249,15 @@ export default function ManagerDashboard({ user, onLogout }) {
           justifyContent: "center",
           alignItems: "center",
           zIndex: 1000,
+          padding: "20px",
+          overflowY: "auto",
         }}>
           <div className="card" style={{
             width: "90%",
             maxWidth: "600px",
             maxHeight: "90vh",
-            overflow: "auto",
+            overflowY: "auto",
+            margin: "auto",
           }}>
             <h3>Assign New Task</h3>
             <div>
