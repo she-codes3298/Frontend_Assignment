@@ -1,5 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+
+/* make sizing predictable and avoid overflow */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.45;
   font-weight: 400;
 
@@ -29,8 +38,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
   background: var(--bg);
@@ -90,23 +97,29 @@ button:focus-visible {
   justify-content: center;
 }
 .center-page {
-  display: grid;
-  place-items: center;
-  min-height: calc(100vh - 48px);
+  /* center the login card vertically and horizontally */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  padding: 20px;
 }
 .card {
   background: var(--card);
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 6px 18px rgba(37, 38, 30, 0.06);
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(37, 38, 30, 0.06);
 }
 .login-card {
   width: 360px;
+  max-width: 92vw;
 }
 .title {
   margin: 0 0 12px 0;
   color: var(--accent);
   font-size: 1.6rem;
+  font-weight: 700;
 }
 .field {
   margin-bottom: 12px;
@@ -123,6 +136,62 @@ button:focus-visible {
   border-radius: 8px;
   border: 1px solid #e3e3d9;
   background: white;
+  max-width: 100%;
+}
+input.small-input {
+  width: 80px;
+  padding: 6px 8px;
+  margin-right: 8px;
+  border-radius: 8px;
+  border: 1px solid #e3e3d9;
+}
+.time-log input.small-input[placeholder="note (optional)"] {
+  width: 140px;
+}
+
+.dark-olive {
+  background: #e8edd8;
+  border: 1px solid #d0d6b2;
+}
+
+.task-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.task-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+}
+.task-bottom .left {
+  flex: 1;
+}
+.task-bottom .right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.priority {
+  font-weight: 700;
+  color: var(--accent);
+}
+.status {
+  font-size: 12px;
+  color: var(--muted);
+}
+textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e3e3d9;
+  max-width: 100%;
+}
+.card h3 {
+  margin-top: 0;
 }
 .actions {
   display: flex;
@@ -156,6 +225,21 @@ button:focus-visible {
   justify-content: space-between;
   margin-bottom: 20px;
 }
+
+/* sticky header for dashboards */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: white;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0ea;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
 .app-header h2 {
   margin: 0;
   color: var(--accent);
@@ -165,16 +249,123 @@ button:focus-visible {
   color: var(--muted);
 }
 .container main {
+  gap: 8px;
+  align-items: center;
   background: white;
   padding: 16px;
-  border-radius: 8px;
+  background: #dde0ab;
+  border-radius: 12px;
 }
 
 .container {
-  padding: 12px 0;
+  background: #fff0f0;
 }
 
 section h3,
 aside h3 {
   margin-top: 0;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+  .app-root {
+    padding: 0 14px;
+  }
+  .container main {
+    padding: 12px;
+  }
+  .login-card {
+    width: 320px;
+  }
+}
+
+@media (max-width: 800px) {
+  .container main {
+    padding: 12px;
+  }
+  .container main > div {
+    grid-template-columns: 1fr !important;
+  }
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .title {
+    font-size: 1.3rem;
+  }
+  .btn {
+    padding: 6px 8px;
+    font-size: 0.95rem;
+  }
+  .login-card {
+    width: 92vw;
+  }
+}
+
+/* Typography tweaks */
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Inter", Arial, sans-serif;
+  color: var(--fg);
+}
+h2 {
+  font-size: 1.4rem;
+}
+h3 {
+  font-size: 1.05rem;
+  color: var(--fg);
+}
+p {
+  color: var(--muted);
+}
+
+/* Task list polish */
+.card + .card {
+  margin-top: 10px;
+}
+.task-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* filter bar */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.filter-bar select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #e6e6dc;
+  background: white;
+}
+
+.task-card {
+  padding: 12px;
+}
+.task-card .task-title {
+  font-size: 1.02rem;
+}
+
+@media (max-width: 800px) {
+  .task-row {
+    flex-direction: column;
+  }
+  .task-side {
+    width: 100%;
+  }
+  .filter-bar {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
