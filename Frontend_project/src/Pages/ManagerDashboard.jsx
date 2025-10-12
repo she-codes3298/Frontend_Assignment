@@ -12,17 +12,26 @@ import {
 
 export default function ManagerDashboard({ user, onLogout }) {
   const [tasks, setTasks] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("date");
 
   useEffect(() => {
     seedIfEmpty();
     setTasks(loadTasks());
   }, []);
 
-  useEffect(() => saveTasks(tasks), [tasks]);
+  // keep in sync across tabs/windows
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "bugapp_tasks_v1") {
+        setTasks(loadTasks());
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
-  function handleDelete(id) {
-    setTasks((s) => s.filter((t) => t.id !== id));
-  }
+  useEffect(() => saveTasks(tasks), [tasks]);
 
   function handleApprove(id) {
     setTasks((s) =>
@@ -40,7 +49,36 @@ export default function ManagerDashboard({ user, onLogout }) {
   }
 
   function handleReopen(id) {
-    setTasks(s => s.map(t => t.id === id ? { ...t, status: 'Open', updatedAt: new Date().toISOString() } : t))
+    setTasks((s) =>
+      s.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status: "Open",
+              pendingApproval: false,
+              updatedAt: new Date().toISOString(),
+            }
+          : t
+      )
+    );
+  }
+
+  function handleLogTime(id, { seconds, note }) {
+    setTasks((s) =>
+      s.map((t) => {
+        if (t.id !== id) return t;
+        const logs = (t.timeLogs || []).concat([
+          { by: user.username, seconds, note, at: new Date().toISOString() },
+        ]);
+        const total = (t.timeSpentSeconds || 0) + seconds;
+        return {
+          ...t,
+          timeLogs: logs,
+          timeSpentSeconds: total,
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
   }
 
   const chartData = useMemo(() => {
@@ -54,6 +92,19 @@ export default function ManagerDashboard({ user, onLogout }) {
     return Object.keys(map)
       .sort()
       .map((k) => ({ date: k, active: map[k] }));
+  }, [tasks]);
+
+  // Calculate pending approval tasks
+  const pendingApprovalTasks = useMemo(() => {
+    return tasks.filter((t) => t.status === "Pending Approval");
+  }, [tasks]);
+
+  // Calculate overdue tasks
+  const overdueTasks = useMemo(() => {
+    const now = new Date();
+    return tasks.filter(
+      (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "Closed"
+    );
   }, [tasks]);
 
   return (
@@ -71,16 +122,98 @@ export default function ManagerDashboard({ user, onLogout }) {
       </header>
 
       <main>
-        <div
-          style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}
-        >
-          <section>
-            <h3>All Tasks</h3>
-            {tasks.map((t) => (
-              <TaskCard key={t.id} task={t} onEdit={() => {}} onDelete={handleDelete} onApprove={handleApprove} onReopen={handleReopen} isManager={true} currentUser={user.username} />
-            ))}
-          </section>
+        {/* Pending Approval Alert */}
+        {pendingApprovalTasks.length > 0 && (
+          <div className="alert alert-warning">
+            <span style={{ fontSize: "20px" }}>🔔</span>
+            <span>
+              {pendingApprovalTasks.length} task
+              {pendingApprovalTasks.length > 1 ? "s" : ""} waiting for your
+              approval!
+            </span>
+          </div>
+        )}
 
+        {/* Overdue Tasks Alert */}
+        {overdueTasks.length > 0 && (
+          <div className="alert alert-error">
+            <span style={{ fontSize: "20px" }}>⚠️</span>
+            <span>
+              {overdueTasks.length} overdue task
+              {overdueTasks.length > 1 ? "s" : ""} need attention!
+            </span>
+          </div>
+        )}
+
+        <div className="dashboard-grid">
+          <section>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3>All Tasks</h3>
+              <div className="filter-bar">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="All">All</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Pending Approval">Pending Approval</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="date">Sort: Date</option>
+                  <option value="priority">Sort: Priority</option>
+                </select>
+              </div>
+            </div>
+
+            {(() => {
+              let list = tasks.slice();
+              if (statusFilter !== "All")
+                list = list.filter((t) => t.status === statusFilter);
+              if (sortBy === "priority") {
+                const order = { High: 0, Medium: 1, Low: 2 };
+                list = list.sort(
+                  (a, b) => order[a.priority] - order[b.priority]
+                );
+              } else {
+                list = list.sort(
+                  (a, b) =>
+                    new Date(b.startDate || b.createdAt) -
+                    new Date(a.startDate || a.createdAt)
+                );
+              }
+              return list.length > 0 ? (
+                list.map((t) => (
+                  <TaskCard
+                    key={t.id}
+                    task={t}
+                    onApprove={handleApprove}
+                    onReopen={handleReopen}
+                    onLogTime={handleLogTime}
+                    isManager={true}
+                    currentUser={user.username}
+                  />
+                ))
+              ) : (
+                <div
+                  className="card"
+                  style={{ textAlign: "center", padding: 24 }}
+                >
+                  <p className="muted">No tasks found</p>
+                </div>
+              );
+            })()}
+          </section>
           <aside>
             <h3>Active Tasks</h3>
             <div style={{ height: 220 }}>
@@ -99,6 +232,8 @@ export default function ManagerDashboard({ user, onLogout }) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Time by Developer removed per request */}
           </aside>
         </div>
       </main>

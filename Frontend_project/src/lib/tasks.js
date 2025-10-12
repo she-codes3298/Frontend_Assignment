@@ -28,6 +28,9 @@ export function createTask(overrides = {}) {
     status: overrides.status || "Open",
     assignee: overrides.assignee || null,
     createdBy: overrides.createdBy || null,
+    // time tracking
+    timeSpentSeconds: overrides.timeSpentSeconds || 0,
+    timeLogs: overrides.timeLogs || [], // { by, seconds, note, at }
     startDate: overrides.startDate || now,
     dueDate: overrides.dueDate || null,
     prerequisites: overrides.prerequisites || "",
@@ -40,7 +43,9 @@ export function createTask(overrides = {}) {
 }
 
 export function updateTask(tasks, id, patch) {
-  return tasks.map(t => t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t)
+  return tasks.map((t) =>
+    t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t
+  );
 }
 
 export function seedIfEmpty() {

@@ -33,6 +33,7 @@ export default function Login({ onLogin }) {
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
           />
         </div>
         <div className="field">
@@ -41,6 +42,7 @@ export default function Login({ onLogin }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
           />
         </div>
         {error && <div className="error">{error}</div>}
@@ -50,7 +52,7 @@ export default function Login({ onLogin }) {
           </button>
         </div>
         <div className="hint">
-          Developer:Rupali(RUPAli@123)/ Manager:Upasana(Faltyx@123)
+          Developer: Rupali (RUPAli@123) / Manager: Upasana (Faltyx@123)
         </div>
       </form>
     </div>

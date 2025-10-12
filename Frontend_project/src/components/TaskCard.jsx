@@ -1,3 +1,14 @@
+import { useState } from "react";
+
+function fmtSeconds(s) {
+  if (!s) return "0m";
+  const mins = Math.floor(s / 60);
+  const hours = Math.floor(mins / 60);
+  const remM = mins % 60;
+  if (hours) return `${hours}h ${remM}m`;
+  return `${remM}m`;
+}
+
 export default function TaskCard({
   task,
   onEdit,
@@ -5,91 +16,215 @@ export default function TaskCard({
   onApprove,
   onClose,
   onReopen,
+  onLogTime,
   isManager,
   currentUser,
 }) {
+  const [logSeconds, setLogSeconds] = useState(0);
+  const [note, setNote] = useState("");
+
   if (!task) return null;
 
+  const total = task.timeSpentSeconds || 0;
+
+  // Check if task is overdue
+  const isOverdue =
+    task.dueDate &&
+    new Date(task.dueDate) < new Date() &&
+    task.status !== "Closed";
+
+  function submitLog(e) {
+    e.preventDefault();
+    let mins = Number(logSeconds) || 0;
+    if (mins <= 0) return;
+    const secs = Math.floor(mins * 60);
+    onLogTime && onLogTime(task.id, { seconds: secs, note: note || "" });
+    setLogSeconds(0);
+    setNote("");
+  }
+
   return (
-    <div className="card task-card" style={{ marginBottom: 12 }}>
-      <div
-        style={{ display: "flex", justifyContent: "space-between", gap: 12 }}
-      >
+    <div
+      className="card task-card dark-olive"
+      style={{
+        marginBottom: 12,
+        border: isOverdue ? "2px solid #ff4444" : undefined,
+        boxShadow: isOverdue ? "0 0 10px rgba(255, 68, 68, 0.3)" : undefined,
+      }}
+    >
+      {isOverdue && (
+        <div
+          style={{
+            backgroundColor: "#ff4444",
+            color: "white",
+            padding: "6px 12px",
+            marginBottom: "8px",
+            borderRadius: "4px",
+            fontSize: "13px",
+            fontWeight: "bold",
+          }}
+        >
+          ⚠️ OVERDUE - Due date: {task.dueDate.slice(0, 10)}
+        </div>
+      )}
+
+      {/* Two column layout */}
+      <div style={{ display: "flex", gap: "20px" }}>
+        {/* LEFT SECTION */}
         <div style={{ flex: 1 }}>
-          <h4 style={{ margin: "0 0 6px 0" }}>{task.title}</h4>
-          <div style={{ color: "var(--muted)", fontSize: 13 }}>
+          {/* Heading */}
+          <h4 style={{ margin: "0 0 8px 0" }}>{task.title}</h4>
+
+          {/* Description */}
+          <div className="muted small" style={{ marginBottom: "8px" }}>
             {task.description}
           </div>
-          <div className="task-meta" style={{ marginTop: 8 }}>
+
+          {/* Dates */}
+          <div className="task-meta" style={{ marginBottom: "8px" }}>
             Start: {task.startDate ? task.startDate.slice(0, 10) : "—"} • Due:{" "}
             {task.dueDate ? task.dueDate.slice(0, 10) : "—"}
           </div>
+
+          {/* Assignee */}
+          <div className="muted" style={{ marginBottom: "8px" }}>
+            Assignee: {task.assignee || "(unassigned)"}
+            {task.createdBy ? ` • Created by ${task.createdBy}` : ""}
+          </div>
+
+          {/* Total time */}
+          <div className="muted" style={{ marginBottom: "12px" }}>
+            Total time: <strong>{fmtSeconds(total)}</strong>
+          </div>
+
+          {/* Time logging - input box and log button (only for assignee) */}
+          {!isManager && currentUser === task.assignee && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                className="small-input"
+                type="number"
+                min="1"
+                placeholder="minutes"
+                value={logSeconds}
+                onChange={(e) => setLogSeconds(e.target.value)}
+                style={{ width: "100px" }}
+              />
+              <button className="btn" onClick={submitLog} type="button">
+                Log Time
+              </button>
+            </div>
+          )}
         </div>
 
-        <div style={{ width: 120, textAlign: "right" }}>
-          <div style={{ fontWeight: 700, color: "var(--accent)" }}>
-            {task.priority}
+        {/* RIGHT SECTION */}
+        <div
+          style={{
+            width: "220px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}
+        >
+          {/* Status (Priority and Status) */}
+          <div>
+            <div
+              className="priority"
+              style={{
+                fontWeight: "bold",
+                marginBottom: "4px",
+                color: "var(--accent)",
+              }}
+            >
+              {task.priority}
+            </div>
+            <div className="status" style={{ fontSize: "14px" }}>
+              {task.status}
+            </div>
           </div>
+
+          {/* Notes box (only for assignee in developer view) */}
+          {!isManager && currentUser === task.assignee && (
+            <div>
+              <input
+                className="small-input"
+                placeholder="note (optional)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                style={{ width: "100%" }}
+              />
+            </div>
+          )}
+
+          {/* Action buttons */}
           <div
             style={{
-              fontSize: 12,
-              color: task.status === "Closed" ? "#6b6b6b" : "var(--fg)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginTop: "auto",
             }}
           >
-            {task.status}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: 12,
-        }}
-      >
-        <div style={{ color: "var(--muted)" }}>
-          Assignee: {task.assignee || "(unassigned)"}
-          {task.createdBy ? ` • Created by ${task.createdBy}` : ""}
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          {isManager && task.status === "Pending Approval" && (
-            <button
-              className="btn"
-              onClick={() => onApprove && onApprove(task.id)}
-            >
-              Approve
-            </button>
-          )}
-
-          {isManager && task.status === "Closed" && (
-            <button
-              className="btn"
-              onClick={() => onReopen && onReopen(task.id)}
-            >
-              Reopen
-            </button>
-          )}
-
-          {!isManager &&
-            task.status !== "Closed" &&
-            currentUser === task.assignee && (
-              <button
-                className="btn"
-                onClick={() => onClose && onClose(task.id)}
-              >
-                Close
-              </button>
+            {/* Developer buttons */}
+            {!isManager && (
+              <>
+                {task.status !== "Closed" &&
+                  task.status !== "Pending Approval" &&
+                  currentUser === task.assignee && (
+                    <button
+                      className="btn"
+                      onClick={() => onClose && onClose(task.id)}
+                      style={{ width: "100%" }}
+                    >
+                      Close
+                    </button>
+                  )}
+                <button
+                  className="btn"
+                  onClick={() => onEdit && onEdit(task)}
+                  style={{ width: "100%" }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => onDelete && onDelete(task.id)}
+                  style={{ width: "100%" }}
+                >
+                  Delete
+                </button>
+              </>
             )}
 
-          <button className="btn" onClick={() => onEdit && onEdit(task)}>
-            Edit
-          </button>
-          <button className="btn" onClick={() => onDelete && onDelete(task.id)}>
-            Delete
-          </button>
+            {/* Manager buttons */}
+            {isManager && task.status === "Pending Approval" && (
+              <>
+                <button
+                  className="btn"
+                  onClick={() => onApprove && onApprove(task.id)}
+                  style={{ width: "100%" }}
+                >
+                  Approve
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => onReopen && onReopen(task.id)}
+                  style={{ width: "100%" }}
+                >
+                  Reopen
+                </button>
+              </>
+            )}
+
+            {isManager && task.status === "Closed" && (
+              <button
+                className="btn"
+                onClick={() => onReopen && onReopen(task.id)}
+                style={{ width: "100%" }}
+              >
+                Reopen
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

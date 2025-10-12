@@ -1,9 +1,29 @@
-.dev-dashboard { }
-.dev-dashboard .controls { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px }
-.dev-dashboard .task-list { display:flex; flex-direction:column; gap:10px }
-.dev-dashboard .aside { background:transparent }
-.dev-dashboard .filter-bar select { padding:8px; border-radius:8px; border:1px solid #e6e6dc }
+.dev-dashboard {
+}
+.dev-dashboard .controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.dev-dashboard .task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dev-dashboard .aside {
+  background: transparent;
+}
+.dev-dashboard .filter-bar select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #e6e6dc;
+}
 
-@media (max-width:800px) {
-  .dev-dashboard .controls { flex-direction:column; align-items:flex-start }
+@media (max-width: 800px) {
+  .dev-dashboard .controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
