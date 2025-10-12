@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { loadTasks, saveTasks, createTask, seedIfEmpty } from "../lib/tasks";
 import TaskForm from "../components/TaskForm";
 import TaskCard from "../components/TaskCard";
@@ -19,10 +19,18 @@ export default function DeveloperDashboard({ user, onLogout }) {
   const [creating, setCreating] = useState(false);
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState("date");
+  const [showNotification, setShowNotification] = useState(false);
+  const [newTaskDetails, setNewTaskDetails] = useState(null);
+  const [dateError, setDateError] = useState("");
+  const previousTaskCount = useRef(0);
 
   useEffect(() => {
     seedIfEmpty();
-    setTasks(loadTasks());
+    const loadedTasks = loadTasks();
+    setTasks(loadedTasks);
+    previousTaskCount.current = loadedTasks.filter(
+      (t) => t.assignee === user.username
+    ).length;
   }, []);
 
   // keep in sync across tabs/windows: reload tasks when localStorage changes
@@ -30,16 +38,67 @@ export default function DeveloperDashboard({ user, onLogout }) {
     function onStorage(e) {
       if (e.key === null || e.key === undefined) return;
       if (e.key === "bugapp_tasks_v1") {
-        setTasks(loadTasks());
+        const newTasks = loadTasks();
+        const myNewTasks = newTasks.filter((t) => t.assignee === user.username);
+        const currentCount = myNewTasks.length;
+        
+        // Check if a new task was assigned to this user
+        if (currentCount > previousTaskCount.current) {
+          const latestTask = myNewTasks.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          )[0];
+          
+          setNewTaskDetails(latestTask);
+          setShowNotification(true);
+        }
+        
+        previousTaskCount.current = currentCount;
+        setTasks(newTasks);
       }
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [user.username]);
 
   useEffect(() => saveTasks(tasks), [tasks]);
 
+  function validateDates(startDate, dueDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (startDate) {
+      const start = new Date(startDate);
+      if (start < today) {
+        return "Start date cannot be in the past";
+      }
+    }
+    
+    if (dueDate) {
+      const due = new Date(dueDate);
+      if (due < today) {
+        return "Due date cannot be in the past";
+      }
+    }
+    
+    if (startDate && dueDate) {
+      const start = new Date(startDate);
+      const due = new Date(dueDate);
+      if (due < start) {
+        return "Due date cannot be before start date";
+      }
+    }
+    
+    return "";
+  }
+
   function handleCreate(data) {
+    // Validate dates
+    const error = validateDates(data.startDate, data.dueDate);
+    if (error) {
+      setDateError(error);
+      return;
+    }
+    
     const t = createTask({
       ...data,
       assignee: data.assignee || user.username,
@@ -47,9 +106,17 @@ export default function DeveloperDashboard({ user, onLogout }) {
     });
     setTasks((s) => [t, ...s]);
     setCreating(false);
+    setDateError("");
   }
 
   function handleUpdate(data) {
+    // Validate dates
+    const error = validateDates(data.startDate, data.dueDate);
+    if (error) {
+      setDateError(error);
+      return;
+    }
+    
     setTasks((s) =>
       s.map((t) =>
         t.id === editing.id
@@ -58,6 +125,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
       )
     );
     setEditing(null);
+    setDateError("");
   }
 
   function handleDelete(id) {
@@ -154,19 +222,78 @@ export default function DeveloperDashboard({ user, onLogout }) {
         </div>
       </header>
 
-      <main>
-        {/* Overdue Tasks Alert */}
-        {overdueTasks.length > 0 && (
-          <div className="alert alert-error">
-            <span style={{ fontSize: "20px" }}>⚠️</span>
-            <span>
-              You have {overdueTasks.length} overdue task
-              {overdueTasks.length > 1 ? "s" : ""}! Please review and update{" "}
-              {overdueTasks.length > 1 ? "them" : "it"} immediately.
-            </span>
+      {/* New Task Notification Popup */}
+      {showNotification && newTaskDetails && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 2000,
+        }}>
+          <div className="card" style={{
+            width: "90%",
+            maxWidth: "500px",
+            padding: "24px",
+            textAlign: "center",
+            border: "3px solid var(--accent)",
+          }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>🎯</div>
+            <h2 style={{ marginBottom: "16px", color: "var(--accent)" }}>
+              New Task Assigned!
+            </h2>
+            <div style={{ textAlign: "left", marginBottom: "20px" }}>
+              <h3 style={{ marginBottom: "12px" }}>{newTaskDetails.title}</h3>
+              <p style={{ color: "var(--muted)", marginBottom: "12px" }}>
+                {newTaskDetails.description}
+              </p>
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <div>
+                  <strong>Priority:</strong> {newTaskDetails.priority}
+                </div>
+                <div>
+                  <strong>Start:</strong> {newTaskDetails.startDate?.slice(0, 10)}
+                </div>
+                <div>
+                  <strong>Due:</strong> {newTaskDetails.dueDate?.slice(0, 10)}
+                </div>
+              </div>
+              <div style={{ marginTop: "12px" }}>
+                <strong>Assigned by:</strong> {newTaskDetails.createdBy}
+              </div>
+            </div>
+            <button
+              className="btn primary"
+              onClick={() => {
+                setShowNotification(false);
+                setNewTaskDetails(null);
+              }}
+              style={{ width: "100%", padding: "12px" }}
+            >
+              Got it!
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
+      {/* Overdue Tasks Alert - Outside main */}
+      {overdueTasks.length > 0 && (
+        <div className="alert alert-error">
+          <span style={{ fontSize: "20px" }}>⚠️</span>
+          <span style={{color:"red"}}>
+            You have {overdueTasks.length} overdue task
+            {overdueTasks.length > 1 ? "s" : ""}! Please review and update{" "}
+            {overdueTasks.length > 1 ? "them" : "it"} immediately.
+          </span>
+        </div>
+      )}
+
+      <main>
         <div className="dashboard-grid">
           <section>
             <div
@@ -175,6 +302,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
                 justifyContent: "space-between",
                 alignItems: "center",
                 gap: 12,
+                marginBottom:4,
               }}
             >
               <h3 style={{ margin: 0 }}>Your Tasks</h3>
@@ -199,19 +327,55 @@ export default function DeveloperDashboard({ user, onLogout }) {
               </div>
             </div>
             {creating && (
-              <TaskForm
-                users={users}
-                onCancel={() => setCreating(false)}
-                onSave={handleCreate}
-              />
+              <>
+                <TaskForm
+                  users={users}
+                  onCancel={() => {
+                    setCreating(false);
+                    setDateError("");
+                  }}
+                  onSave={handleCreate}
+                />
+                {dateError && (
+                  <div style={{
+                    backgroundColor: "#ff4444",
+                    color: "white",
+                    padding: "8px 12px",
+                    marginTop: "8px",
+                    marginBottom: "8px",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                  }}>
+                    ⚠️ {dateError}
+                  </div>
+                )}
+              </>
             )}
             {editing && (
-              <TaskForm
-                initial={editing}
-                users={users}
-                onCancel={() => setEditing(null)}
-                onSave={handleUpdate}
-              />
+              <>
+                <TaskForm
+                  initial={editing}
+                  users={users}
+                  onCancel={() => {
+                    setEditing(null);
+                    setDateError("");
+                  }}
+                  onSave={handleUpdate}
+                />
+                {dateError && (
+                  <div style={{
+                    backgroundColor: "#ff4444",
+                    color: "white",
+                    padding: "8px 12px",
+                    marginTop: "8px",
+                    marginBottom: "8px",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                  }}>
+                    ⚠️ {dateError}
+                  </div>
+                )}
+              </>
             )}
             {(() => {
               let list = tasks.filter(
