@@ -8,6 +8,7 @@ This application allows managers and developers to **create, assign, track, and 
 ## 🚀 Live Demo
 
 🔗 **Deployed on Vercel:** [Bug Tracker App](https://frontend-assignment-seven-gamma.vercel.app/)
+  **video demontration link**:https://drive.google.com/file/d/1cmEa7wSzHblwp0f8E-Jpd99CJgVHLWtg/view?usp=sharing
 
 ---
 
@@ -26,7 +27,10 @@ Each user can log in, assign or receive tasks, update progress, and track activi
   - Task Title  
   - Description  
   - Priority  
-  - Start Date & Due Date  
+  - Start Date & Due Date
+  - Prerequisites
+  - Milestones
+  - Techstats
 - **Date validation** ensures:
   - Start Date cannot be before the current date  
   - Start Date cannot exceed the Due Date  
@@ -57,12 +61,12 @@ Each user can log in, assign or receive tasks, update progress, and track activi
 ## 💡 Highlights
 
 - Fully **responsive** design (works on all screen sizes)  
-- **Local Storage** integration for persistent data between sessions  
+- **Firebase Storage** integration for persistent data between sessions  
 - Clean and **professional color theme**  
 - Smooth and **interactive user experience**  
 - **Real-time-like updates** between dashboards  
 
-> ⚠️ Note: The current version stores data in **LocalStorage**, which is ideal for demonstration.  
+> ⚠️ Note: The current version stores data in **Firebase Storage**, which is ideal for demonstration.  
 > For production, this can be upgraded to use a backend (e.g., Firebase, MongoDB + Express, or Supabase).
 
 ---
@@ -70,9 +74,9 @@ Each user can log in, assign or receive tasks, update progress, and track activi
 ## 🛠️ Tech Stack
 
 - **Frontend:** React (Vite)  
-- **Styling:** Tailwind CSS  
+- **Styling:** CSS  
 - **State Management:** React Hooks (`useState`, `useEffect`, `useMemo`)  
-- **Data Storage:** LocalStorage  
+- **Data Storage:** Firebase Database
 - **Deployment:** Vercel  
 
 ---
@@ -81,12 +85,11 @@ Each user can log in, assign or receive tasks, update progress, and track activi
 
 To run the app locally:
 
-```bash
 # 1️⃣ Clone this repository
-git clone https://github.com/your-username/bug-tracker-app.git
+git clone https://github.com/she-codes3298/Frontend_Assignment
 
 # 2️⃣ Navigate into the project directory
-cd bug-tracker-app
+cd Frontend_Assignment
 
 # 3️⃣ Install dependencies
 npm install
