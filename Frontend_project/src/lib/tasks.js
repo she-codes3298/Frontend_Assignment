@@ -27,6 +27,7 @@ export function createTask(overrides = {}) {
     priority: overrides.priority || "Medium",
     status: overrides.status || "Open",
     assignee: overrides.assignee || null,
+    createdBy: overrides.createdBy || null,
     startDate: overrides.startDate || now,
     dueDate: overrides.dueDate || null,
     prerequisites: overrides.prerequisites || "",
@@ -36,6 +37,10 @@ export function createTask(overrides = {}) {
     updatedAt: now,
     pendingApproval: overrides.pendingApproval || false,
   };
+}
+
+export function updateTask(tasks, id, patch) {
+  return tasks.map(t => t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t)
 }
 
 export function seedIfEmpty() {
