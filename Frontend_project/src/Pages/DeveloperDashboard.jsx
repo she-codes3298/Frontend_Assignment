@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { loadTasks, saveTasks, createTask, seedIfEmpty } from "../lib/tasks";
+import { subscribeToTasks, createTask, saveTask, updateTask, deleteTask } from "../lib/tasks";
 import TaskForm from "../components/TaskForm";
 import TaskCard from "../components/TaskCard";
 import {
@@ -22,51 +22,35 @@ export default function DeveloperDashboard({ user, onLogout }) {
   const [showNotification, setShowNotification] = useState(false);
   const [newTaskDetails, setNewTaskDetails] = useState(null);
   const [dateError, setDateError] = useState("");
+  const [loading, setLoading] = useState(true);
   const previousTaskCount = useRef(0);
 
+  // Subscribe to real-time task updates
   useEffect(() => {
-    seedIfEmpty();
-    const loadedTasks = loadTasks();
-    setTasks(loadedTasks);
-    // Initialize the count without showing notification
-    previousTaskCount.current = loadedTasks.filter(
-      (t) => t.assignee === user.username
-    ).length;
-  }, [user.username]);
-
-  // keep in sync across tabs/windows: reload tasks when localStorage changes
-  useEffect(() => {
-    function onStorage(e) {
-      if (e.key === null || e.key === undefined) return;
-      if (e.key === "bugapp_tasks_v1") {
-        const newTasks = loadTasks();
-        const myNewTasks = newTasks.filter((t) => t.assignee === user.username);
-        const currentCount = myNewTasks.length;
+    const unsubscribe = subscribeToTasks((updatedTasks) => {
+      const myNewTasks = updatedTasks.filter((t) => t.assignee === user.username);
+      const currentCount = myNewTasks.length;
+      
+      // Check if a new task was manually assigned
+      if (!loading && currentCount > previousTaskCount.current) {
+        const sortedTasks = myNewTasks.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        const latestTask = sortedTasks[0];
         
-        // Check if a new task was manually assigned to this user by a manager
-        if (currentCount > previousTaskCount.current) {
-          // Find the newest task
-          const sortedTasks = myNewTasks.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          const latestTask = sortedTasks[0];
-          
-          // Only show notification if it was manually assigned by manager
-          if (latestTask && latestTask.manuallyAssigned && latestTask.createdBy !== user.username) {
-            setNewTaskDetails(latestTask);
-            setShowNotification(true);
-          }
+        if (latestTask && latestTask.manuallyAssigned && latestTask.createdBy !== user.username) {
+          setNewTaskDetails(latestTask);
+          setShowNotification(true);
         }
-        
-        previousTaskCount.current = currentCount;
-        setTasks(newTasks);
       }
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [user.username]);
+      
+      previousTaskCount.current = currentCount;
+      setTasks(updatedTasks);
+      setLoading(false);
+    });
 
-  useEffect(() => saveTasks(tasks), [tasks]);
+    return () => unsubscribe();
+  }, [user.username, loading]);
 
   function validateDates(startDate, dueDate) {
     const today = new Date();
@@ -97,78 +81,93 @@ export default function DeveloperDashboard({ user, onLogout }) {
     return "";
   }
 
-  function handleCreate(data) {
-    // Validate dates
+  async function handleCreate(data) {
     const error = validateDates(data.startDate, data.dueDate);
     if (error) {
       setDateError(error);
       return;
     }
     
-    const t = createTask({
-      ...data,
-      assignee: data.assignee || user.username,
-      createdBy: user.username,
-    });
-    setTasks((s) => [t, ...s]);
-    setCreating(false);
-    setDateError("");
+    try {
+      const t = createTask({
+        ...data,
+        assignee: data.assignee || user.username,
+        createdBy: user.username,
+      });
+      await saveTask(t);
+      setCreating(false);
+      setDateError("");
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert("Failed to create task. Please try again.");
+    }
   }
 
-  function handleUpdate(data) {
-    // Validate dates
+  async function handleUpdate(data) {
     const error = validateDates(data.startDate, data.dueDate);
     if (error) {
       setDateError(error);
       return;
     }
     
-    setTasks((s) =>
-      s.map((t) =>
-        t.id === editing.id
-          ? { ...t, ...data, updatedAt: new Date().toISOString() }
-          : t
-      )
-    );
-    setEditing(null);
-    setDateError("");
+    try {
+      if (!editing.firestoreId) {
+        console.error("No firestoreId found for task");
+        return;
+      }
+      
+      await updateTask(editing.firestoreId, data);
+      setEditing(null);
+      setDateError("");
+    } catch (error) {
+      console.error("Error updating task:", error);
+      alert("Failed to update task. Please try again.");
+    }
   }
 
-  function handleDelete(id) {
-    setTasks((s) => s.filter((t) => t.id !== id));
+  async function handleDelete(firestoreId) {
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+    
+    try {
+      await deleteTask(firestoreId);
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      alert("Failed to delete task. Please try again.");
+    }
   }
 
-  function handleClose(id) {
-    setTasks((s) =>
-      s.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: "Pending Approval",
-              pendingApproval: true,
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
+  async function handleClose(firestoreId) {
+    try {
+      await updateTask(firestoreId, {
+        status: "Pending Approval",
+        pendingApproval: true,
+      });
+    } catch (error) {
+      console.error("Error closing task:", error);
+      alert("Failed to close task. Please try again.");
+    }
   }
 
-  function handleLogTime(id, { seconds, note }) {
-    setTasks((s) =>
-      s.map((t) => {
-        if (t.id !== id) return t;
-        const logs = (t.timeLogs || []).concat([
-          { by: user.username, seconds, note, at: new Date().toISOString() },
-        ]);
-        const total = (t.timeSpentSeconds || 0) + seconds;
-        return {
-          ...t,
-          timeLogs: logs,
-          timeSpentSeconds: total,
-          updatedAt: new Date().toISOString(),
-        };
-      })
-    );
+  async function handleLogTime(firestoreId, { seconds, note }) {
+    try {
+      const task = tasks.find(t => t.firestoreId === firestoreId);
+      if (!task) return;
+
+      const logs = (task.timeLogs || []).concat([
+        { by: user.username, seconds, note, at: new Date().toISOString() },
+      ]);
+      const total = (task.timeSpentSeconds || 0) + seconds;
+
+      await updateTask(firestoreId, {
+        timeLogs: logs,
+        timeSpentSeconds: total,
+      });
+    } catch (error) {
+      console.error("Error logging time:", error);
+      alert("Failed to log time. Please try again.");
+    }
   }
 
   const chartData = useMemo(() => {
@@ -199,7 +198,6 @@ export default function DeveloperDashboard({ user, onLogout }) {
     )
   );
 
-  // Calculate overdue tasks for current user
   const overdueTasks = useMemo(() => {
     const now = new Date();
     return tasks.filter(
@@ -210,6 +208,16 @@ export default function DeveloperDashboard({ user, onLogout }) {
         t.status !== "Closed"
     );
   }, [tasks, user]);
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>Loading tasks...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container dev-dashboard">
@@ -228,7 +236,6 @@ export default function DeveloperDashboard({ user, onLogout }) {
         </div>
       </header>
 
-    
       {showNotification && newTaskDetails && (
         <div style={{
           position: "fixed",
@@ -290,7 +297,6 @@ export default function DeveloperDashboard({ user, onLogout }) {
         </div>
       )}
 
-    
       {overdueTasks.length > 0 && (
         <div className="alert alert-error">
           <span style={{ fontSize: "20px" }}>⚠️</span>
@@ -412,7 +418,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
               }
               return list.map((t) => (
                 <TaskCard
-                  key={t.id}
+                  key={t.firestoreId}
                   task={t}
                   onEdit={(task) => setEditing(task)}
                   onDelete={handleDelete}

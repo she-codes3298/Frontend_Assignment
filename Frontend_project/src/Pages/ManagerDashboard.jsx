@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadTasks, saveTasks, seedIfEmpty, createTask } from "../lib/tasks";
+import { subscribeToTasks, createTask, saveTask, updateTask } from "../lib/tasks";
 import TaskCard from "../components/TaskCard";
 import {
   LineChart,
@@ -24,71 +24,61 @@ export default function ManagerDashboard({ user, onLogout }) {
     priority: "Medium",
   });
   const [dateError, setDateError] = useState("");
+  const [loading, setLoading] = useState(true);
 
+  // Subscribe to real-time task updates
   useEffect(() => {
-    seedIfEmpty();
-    setTasks(loadTasks());
+    const unsubscribe = subscribeToTasks((updatedTasks) => {
+      setTasks(updatedTasks);
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
-  // keep in sync across tabs/windows
-  useEffect(() => {
-    function onStorage(e) {
-      if (e.key === "bugapp_tasks_v1") {
-        setTasks(loadTasks());
-      }
+  async function handleApprove(firestoreId) {
+    try {
+      await updateTask(firestoreId, {
+        status: "Closed",
+        pendingApproval: false,
+      });
+    } catch (error) {
+      console.error("Error approving task:", error);
+      alert("Failed to approve task. Please try again.");
     }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  useEffect(() => saveTasks(tasks), [tasks]);
-
-  function handleApprove(id) {
-    setTasks((s) =>
-      s.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: "Closed",
-              pendingApproval: false,
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
   }
 
-  function handleReopen(id) {
-    setTasks((s) =>
-      s.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: "Open",
-              pendingApproval: false,
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
+  async function handleReopen(firestoreId) {
+    try {
+      await updateTask(firestoreId, {
+        status: "Open",
+        pendingApproval: false,
+      });
+    } catch (error) {
+      console.error("Error reopening task:", error);
+      alert("Failed to reopen task. Please try again.");
+    }
   }
 
-  function handleLogTime(id, { seconds, note }) {
-    setTasks((s) =>
-      s.map((t) => {
-        if (t.id !== id) return t;
-        const logs = (t.timeLogs || []).concat([
-          { by: user.username, seconds, note, at: new Date().toISOString() },
-        ]);
-        const total = (t.timeSpentSeconds || 0) + seconds;
-        return {
-          ...t,
-          timeLogs: logs,
-          timeSpentSeconds: total,
-          updatedAt: new Date().toISOString(),
-        };
-      })
-    );
+  async function handleLogTime(firestoreId, { seconds, note }) {
+    try {
+      const task = tasks.find(t => t.firestoreId === firestoreId);
+      if (!task) return;
+
+      const logs = (task.timeLogs || []).concat([
+        { by: user.username, seconds, note, at: new Date().toISOString() },
+      ]);
+      const total = (task.timeSpentSeconds || 0) + seconds;
+
+      await updateTask(firestoreId, {
+        timeLogs: logs,
+        timeSpentSeconds: total,
+      });
+    } catch (error) {
+      console.error("Error logging time:", error);
+      alert("Failed to log time. Please try again.");
+    }
   }
 
   function validateDates(startDate, dueDate) {
@@ -123,7 +113,6 @@ export default function ManagerDashboard({ user, onLogout }) {
   function handleFormChange(field, value) {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Validate dates when they change
     if (field === "startDate" || field === "dueDate") {
       const newData = { ...formData, [field]: value };
       const error = validateDates(newData.startDate, newData.dueDate);
@@ -131,10 +120,9 @@ export default function ManagerDashboard({ user, onLogout }) {
     }
   }
 
-  function handleAssignTask(e) {
+  async function handleAssignTask(e) {
     e.preventDefault();
     
-    // Final validation
     const error = validateDates(formData.startDate, formData.dueDate);
     if (error) {
       setDateError(error);
@@ -151,37 +139,37 @@ export default function ManagerDashboard({ user, onLogout }) {
       return;
     }
 
-    const newTask = createTask({
-      title: formData.title,
-      description: formData.description,
-      startDate: formData.startDate || new Date().toISOString(),
-      dueDate: formData.dueDate || null,
-      assignee: formData.assignee,
-      createdBy: user.username,
-      priority: formData.priority,
-      status: "Open",
-      manuallyAssigned: true, // Flag to indicate manual assignment by manager
-      assignedAt: new Date().toISOString(), // Timestamp for tracking
-    });
+    try {
+      const newTask = createTask({
+        title: formData.title,
+        description: formData.description,
+        startDate: formData.startDate || new Date().toISOString(),
+        dueDate: formData.dueDate || null,
+        assignee: formData.assignee,
+        createdBy: user.username,
+        priority: formData.priority,
+        status: "Open",
+        manuallyAssigned: true,
+        assignedAt: new Date().toISOString(),
+      });
 
-    setTasks(prev => [newTask, ...prev]);
-    
-    // Trigger a custom event for notification across tabs
-    window.dispatchEvent(new CustomEvent('taskAssigned', { 
-      detail: { task: newTask }
-    }));
-    
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      startDate: "",
-      dueDate: "",
-      assignee: "",
-      priority: "Medium",
-    });
-    setDateError("");
-    setShowAssignForm(false);
+      await saveTask(newTask);
+      
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        startDate: "",
+        dueDate: "",
+        assignee: "",
+        priority: "Medium",
+      });
+      setDateError("");
+      setShowAssignForm(false);
+    } catch (error) {
+      console.error("Error assigning task:", error);
+      alert("Failed to assign task. Please try again.");
+    }
   }
 
   const chartData = useMemo(() => {
@@ -197,12 +185,10 @@ export default function ManagerDashboard({ user, onLogout }) {
       .map((k) => ({ date: k, active: map[k] }));
   }, [tasks]);
 
-  // Calculate pending approval tasks
   const pendingApprovalTasks = useMemo(() => {
     return tasks.filter((t) => t.status === "Pending Approval");
   }, [tasks]);
 
-  // Calculate overdue tasks
   const overdueTasks = useMemo(() => {
     const now = new Date();
     return tasks.filter(
@@ -210,7 +196,6 @@ export default function ManagerDashboard({ user, onLogout }) {
     );
   }, [tasks]);
 
-  // Get unique users from tasks
   const users = Array.from(
     new Set(
       tasks
@@ -218,6 +203,16 @@ export default function ManagerDashboard({ user, onLogout }) {
         .filter(Boolean)
     )
   ).concat(["Rupali"]).filter((v, i, a) => a.indexOf(v) === i);
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>Loading tasks...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -228,7 +223,7 @@ export default function ManagerDashboard({ user, onLogout }) {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn" onClick={() => setShowAssignForm(true)}>
-            Assign New Task
+             New Assignment
           </button>
           <button className="btn" onClick={onLogout}>
             Logout
@@ -236,7 +231,6 @@ export default function ManagerDashboard({ user, onLogout }) {
         </div>
       </header>
 
-      {/* Task Assignment Form Modal */}
       {showAssignForm && (
         <div style={{
           position: "fixed",
@@ -374,7 +368,6 @@ export default function ManagerDashboard({ user, onLogout }) {
         </div>
       )}
 
-      {/* Pending Approval Alert - Outside main */}
       {pendingApprovalTasks.length > 0 && (
         <div className="alert alert-warning">
           <span style={{ fontSize: "20px" }}>🔔</span>
@@ -386,7 +379,6 @@ export default function ManagerDashboard({ user, onLogout }) {
         </div>
       )}
 
-      {/* Overdue Tasks Alert - Outside main */}
       {overdueTasks.length > 0 && (
         <div className="alert alert-error">
           <span style={{ fontSize: "20px" }}>⚠️</span>
@@ -448,7 +440,7 @@ export default function ManagerDashboard({ user, onLogout }) {
               return list.length > 0 ? (
                 list.map((t) => (
                   <TaskCard
-                    key={t.id}
+                    key={t.firestoreId}
                     task={t}
                     onApprove={handleApprove}
                     onReopen={handleReopen}

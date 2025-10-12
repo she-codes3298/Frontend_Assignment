@@ -33,12 +33,21 @@ export default function TaskCard({
     new Date(task.dueDate) < new Date() &&
     task.status !== "Closed";
 
+  // Check if current user can edit/delete this task
+  const canModify = !isManager && (currentUser === task.assignee || currentUser === task.createdBy);
+  
+  // Check if current user can close this task
+  const canClose = !isManager && 
+                   currentUser === task.assignee && 
+                   task.status !== "Closed" && 
+                   task.status !== "Pending Approval";
+
   function submitLog(e) {
     e.preventDefault();
     let mins = Number(logSeconds) || 0;
     if (mins <= 0) return;
     const secs = Math.floor(mins * 60);
-    onLogTime && onLogTime(task.id, { seconds: secs, note: note || "" });
+    onLogTime && onLogTime(task.firestoreId, { seconds: secs, note: note || "" });
     setLogSeconds(0);
     setNote("");
   }
@@ -68,37 +77,29 @@ export default function TaskCard({
         </div>
       )}
 
-
       <div style={{ display: "flex", gap: "20px" }}>
-      
         <div style={{ flex: 1 }}>
-        
           <h4 style={{ margin: "0 0 8px 0" }}>{task.title}</h4>
 
-          
           <div className="muted small" style={{ marginBottom: "8px" }}>
             {task.description}
           </div>
 
-        
           <div className="task-meta" style={{ marginBottom: "8px" }}>
             Start: {task.startDate ? task.startDate.slice(0, 10) : "—"} • Due:{" "}
             {task.dueDate ? task.dueDate.slice(0, 10) : "—"}
           </div>
 
-          
           <div className="muted" style={{ marginBottom: "8px" }}>
             Assignee: {task.assignee || "(unassigned)"}
             {task.createdBy ? ` • Created by ${task.createdBy}` : ""}
           </div>
 
-          
           <div className="muted" style={{ marginBottom: "12px" }}>
             Total time: <strong>{fmtSeconds(total)}</strong>
           </div>
 
-          
-          {!isManager && currentUser === task.assignee && (
+          {!isManager && currentUser === task.assignee && task.status !== "Closed" && (
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <input
                 className="small-input"
@@ -116,7 +117,6 @@ export default function TaskCard({
           )}
         </div>
 
-        
         <div
           style={{
             width: "220px",
@@ -125,7 +125,6 @@ export default function TaskCard({
             gap: "12px",
           }}
         >
-          
           <div>
             <div
               className="priority"
@@ -142,8 +141,7 @@ export default function TaskCard({
             </div>
           </div>
 
-          
-          {!isManager && currentUser === task.assignee && (
+          {!isManager && currentUser === task.assignee && task.status !== "Closed" && (
             <div>
               <input
                 className="small-input"
@@ -155,7 +153,6 @@ export default function TaskCard({
             </div>
           )}
 
-          
           <div
             style={{
               display: "flex",
@@ -164,20 +161,21 @@ export default function TaskCard({
               marginTop: "auto",
             }}
           >
-            
-            {!isManager && (
+            {/* Developer View Buttons */}
+            {!isManager && canModify && (
               <>
-                {task.status !== "Closed" &&
-                  task.status !== "Pending Approval" &&
-                  currentUser === task.assignee && (
-                    <button
-                      className="btn"
-                      onClick={() => onClose && onClose(task.id)}
-                      style={{ width: "100%" }}
-                    >
-                      Close
-                    </button>
-                  )}
+                {/* Close button - only for open/in-progress tasks assigned to current user */}
+                {canClose && (
+                  <button
+                    className="btn"
+                    onClick={() => onClose && onClose(task.firestoreId)}
+                    style={{ width: "100%" }}
+                  >
+                    Close
+                  </button>
+                )}
+                
+                {/* Edit button - always available for tasks user can modify */}
                 <button
                   className="btn"
                   onClick={() => onEdit && onEdit(task)}
@@ -185,9 +183,11 @@ export default function TaskCard({
                 >
                   Edit
                 </button>
+                
+                {/* Delete button - always available for tasks user can modify */}
                 <button
                   className="btn"
-                  onClick={() => onDelete && onDelete(task.id)}
+                  onClick={() => onDelete && onDelete(task.firestoreId)}
                   style={{ width: "100%" }}
                 >
                   Delete
@@ -195,19 +195,19 @@ export default function TaskCard({
               </>
             )}
 
-            
+            {/* Manager View Buttons */}
             {isManager && task.status === "Pending Approval" && (
               <>
                 <button
                   className="btn"
-                  onClick={() => onApprove && onApprove(task.id)}
+                  onClick={() => onApprove && onApprove(task.firestoreId)}
                   style={{ width: "100%" }}
                 >
                   Approve
                 </button>
                 <button
                   className="btn"
-                  onClick={() => onReopen && onReopen(task.id)}
+                  onClick={() => onReopen && onReopen(task.firestoreId)}
                   style={{ width: "100%" }}
                 >
                   Reopen
@@ -218,7 +218,7 @@ export default function TaskCard({
             {isManager && task.status === "Closed" && (
               <button
                 className="btn"
-                onClick={() => onReopen && onReopen(task.id)}
+                onClick={() => onReopen && onReopen(task.firestoreId)}
                 style={{ width: "100%" }}
               >
                 Reopen
