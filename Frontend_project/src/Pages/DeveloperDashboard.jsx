@@ -228,7 +228,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
         </div>
       </header>
 
-      {/* New Task Notification Popup */}
+    
       {showNotification && newTaskDetails && (
         <div style={{
           position: "fixed",
@@ -290,7 +290,7 @@ export default function DeveloperDashboard({ user, onLogout }) {
         </div>
       )}
 
-      {/* Overdue Tasks Alert - Outside main */}
+    
       {overdueTasks.length > 0 && (
         <div className="alert alert-error">
           <span style={{ fontSize: "20px" }}>⚠️</span>

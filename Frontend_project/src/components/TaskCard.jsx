@@ -68,36 +68,36 @@ export default function TaskCard({
         </div>
       )}
 
-      {/* Two column layout */}
+
       <div style={{ display: "flex", gap: "20px" }}>
-        {/* LEFT SECTION */}
+      
         <div style={{ flex: 1 }}>
-          {/* Heading */}
+        
           <h4 style={{ margin: "0 0 8px 0" }}>{task.title}</h4>
 
-          {/* Description */}
+          
           <div className="muted small" style={{ marginBottom: "8px" }}>
             {task.description}
           </div>
 
-          {/* Dates */}
+        
           <div className="task-meta" style={{ marginBottom: "8px" }}>
             Start: {task.startDate ? task.startDate.slice(0, 10) : "—"} • Due:{" "}
             {task.dueDate ? task.dueDate.slice(0, 10) : "—"}
           </div>
 
-          {/* Assignee */}
+          
           <div className="muted" style={{ marginBottom: "8px" }}>
             Assignee: {task.assignee || "(unassigned)"}
             {task.createdBy ? ` • Created by ${task.createdBy}` : ""}
           </div>
 
-          {/* Total time */}
+          
           <div className="muted" style={{ marginBottom: "12px" }}>
             Total time: <strong>{fmtSeconds(total)}</strong>
           </div>
 
-          {/* Time logging - input box and log button (only for assignee) */}
+          
           {!isManager && currentUser === task.assignee && (
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <input
@@ -116,7 +116,7 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* RIGHT SECTION */}
+        
         <div
           style={{
             width: "220px",
@@ -125,7 +125,7 @@ export default function TaskCard({
             gap: "12px",
           }}
         >
-          {/* Status (Priority and Status) */}
+          
           <div>
             <div
               className="priority"
@@ -142,7 +142,7 @@ export default function TaskCard({
             </div>
           </div>
 
-          {/* Notes box (only for assignee in developer view) */}
+          
           {!isManager && currentUser === task.assignee && (
             <div>
               <input
@@ -155,7 +155,7 @@ export default function TaskCard({
             </div>
           )}
 
-          {/* Action buttons */}
+          
           <div
             style={{
               display: "flex",
@@ -164,7 +164,7 @@ export default function TaskCard({
               marginTop: "auto",
             }}
           >
-            {/* Developer buttons */}
+            
             {!isManager && (
               <>
                 {task.status !== "Closed" &&
@@ -195,7 +195,7 @@ export default function TaskCard({
               </>
             )}
 
-            {/* Manager buttons */}
+            
             {isManager && task.status === "Pending Approval" && (
               <>
                 <button
