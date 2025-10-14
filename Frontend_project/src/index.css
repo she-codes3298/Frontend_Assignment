@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
 
-/* make sizing predictable and avoid overflow */
 *,
 *::before,
 *::after {
@@ -16,7 +15,7 @@
   --bg: #ffffff;
   --fg: #243023;
   --muted: #6b6b5a;
-  --accent: #758a2b; /* olive green */
+  --accent: #758a2b; 
   --accent-600: #6b7f26;
   --card: #f6f7f2;
 
@@ -97,7 +96,7 @@ button:focus-visible {
   justify-content: center;
 }
 .center-page {
-  /* center the login card vertically and horizontally */
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -226,7 +225,7 @@ textarea {
   margin-bottom: 20px;
 }
 
-/* sticky header for dashboards */
+
 .app-header {
   position: sticky;
   top: 0;
@@ -258,7 +257,7 @@ textarea {
 }
 
 .container {
-  background: transparent; /* Changed from #fff0f0 */
+  background: transparent;
 }
 
 section h3,
@@ -266,7 +265,7 @@ aside h3 {
   margin-top: 0;
 }
 
-/* Responsive layout */
+
 @media (max-width: 900px) {
   .app-root {
     padding: 0 14px;
@@ -313,7 +312,6 @@ aside h3 {
   }
 }
 
-/* Typography tweaks */
 h1,
 h2,
 h3,
@@ -332,7 +330,7 @@ p {
   color: var(--muted);
 }
 
-/* Task list polish */
+
 .card + .card {
   margin-top: 10px;
 }
@@ -341,7 +339,7 @@ p {
   color: var(--muted);
 }
 
-/* filter bar */
+
 .filter-bar {
   display: flex;
   gap: 8px;
