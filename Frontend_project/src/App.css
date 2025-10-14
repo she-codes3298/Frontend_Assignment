@@ -1,4 +1,4 @@
-/* ===== ROOT VARIABLES ===== */
+
 :root {
   --bg-primary: #f8f9fa;
   --bg-secondary: #ffffff;
@@ -15,7 +15,6 @@
   --error: #c41e3a;
 }
 
-/* ===== RESET & BASE ===== */
 * {
   margin: 0;
   padding: 0;
@@ -34,7 +33,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== LAYOUT ===== */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -48,7 +47,7 @@ body {
   }
 }
 
-/* ===== CENTER PAGE (LOGIN) ===== */
+
 .center-page {
   min-height: 100vh;
   display: flex;
@@ -58,7 +57,7 @@ body {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-/* ===== CARDS ===== */
+
 .card {
   background-color: var(--card-bg);
   border-radius: 12px;
@@ -80,7 +79,7 @@ body {
   }
 }
 
-/* ===== LOGIN CARD ===== */
+
 .login-card {
   width: 100%;
   max-width: 400px;
@@ -108,7 +107,7 @@ body {
   }
 }
 
-/* ===== FORM ELEMENTS ===== */
+
 .field {
   margin-bottom: 20px;
 }
@@ -154,7 +153,7 @@ textarea {
   font-size: 13px;
 }
 
-/* ===== BUTTONS ===== */
+
 .btn {
   padding: 10px 18px;
   background-color: var(--bg-secondary);
@@ -215,7 +214,7 @@ textarea {
   }
 }
 
-/* ===== ACTIONS ===== */
+
 .actions {
   display: flex;
   gap: 10px;
@@ -239,7 +238,7 @@ textarea {
   }
 }
 
-/* ===== ERROR & HINT ===== */
+
 .error {
   color: var(--error);
   font-size: 13px;
@@ -259,7 +258,7 @@ textarea {
   border-top: 1px solid var(--border);
 }
 
-/* ===== HEADER ===== */
+
 .app-header {
   position: sticky;
   top: 0;
@@ -312,7 +311,7 @@ textarea {
   }
 }
 
-/* ===== FILTER BAR ===== */
+
 .filter-bar {
   display: flex;
   gap: 8px;
@@ -336,7 +335,6 @@ textarea {
   }
 }
 
-/* ===== TASK CARD ===== */
 .task-card {
   margin-bottom: 16px;
   max-width: 100%;
@@ -384,7 +382,7 @@ textarea {
   font-size: 13px;
 }
 
-/* ===== TASK BOTTOM ===== */
+
 .task-bottom {
   display: flex;
   justify-content: space-between;
@@ -419,7 +417,7 @@ textarea {
   }
 }
 
-/* ===== TIME LOG ===== */
+
 .time-log {
   display: flex;
   gap: 6px;
@@ -439,7 +437,7 @@ textarea {
   }
 }
 
-/* ===== GRID LAYOUT ===== */
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -454,7 +452,6 @@ textarea {
   }
 }
 
-/* ===== MAIN CONTENT ===== */
 main {
   background: transparent;
   padding: 0;
@@ -462,7 +459,7 @@ main {
   overflow: hidden;
 }
 
-/* ===== SECTION & ASIDE ===== */
+
 section,
 aside {
   max-width: 100%;
@@ -487,7 +484,7 @@ aside .card {
   padding: 16px;
 }
 
-/* ===== ALERTS ===== */
+
 .alert {
   padding: 14px 18px;
   border-radius: 8px;
@@ -527,7 +524,7 @@ aside .card {
   }
 }
 
-/* ===== MODAL OVERLAY ===== */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -558,7 +555,7 @@ aside .card {
   }
 }
 
-/* ===== RESPONSIVE UTILITIES ===== */
+
 @media (max-width: 768px) {
   h3 {
     font-size: 18px;
@@ -569,7 +566,7 @@ aside .card {
   }
 }
 
-/* ===== SCROLLBAR ===== */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -588,7 +585,7 @@ aside .card {
   background: var(--accent);
 }
 
-/* ===== UTILITY CLASSES ===== */
+
 .w-full {
   width: 100%;
 }
@@ -605,8 +602,6 @@ aside .card {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
-
-/* ===== PREVENT ALL ELEMENTS FROM OVERFLOWING ===== */
 section,
 aside,
 .card,
@@ -622,7 +617,7 @@ button,
   max-width: 100%;
 }
 
-/* ===== ADDITIONAL RESPONSIVE FIXES ===== */
+
 @media (max-width: 480px) {
   .container {
     padding: 10px;
@@ -649,7 +644,7 @@ button,
   }
 }
 
-/* ===== BUTTON GROUP FIXES ===== */
+
 .app-header > div:last-child {
   display: flex;
   gap: 8px;
@@ -667,7 +662,7 @@ button,
   }
 }
 
-/* ===== FORM IMPROVEMENTS ===== */
+
 .field input[type="date"] {
   cursor: pointer;
 }
@@ -679,7 +674,7 @@ button,
   cursor: not-allowed;
 }
 
-/* ===== LOADING STATE ===== */
+
 .loading {
   display: flex;
   justify-content: center;
@@ -688,7 +683,7 @@ button,
   color: var(--text-muted);
 }
 
-/* ===== EMPTY STATE ===== */
+
 .empty-state {
   text-align: center;
   padding: 40px 20px;
@@ -699,8 +694,6 @@ button,
   color: var(--text-muted);
   margin-bottom: 8px;
 }
-
-/* ===== BADGE STYLES ===== */
 .badge {
   display: inline-block;
   padding: 4px 10px;
@@ -728,7 +721,7 @@ button,
   border: 1px solid rgba(117, 138, 43, 0.3);
 }
 
-/* ===== TASK CARD ENHANCEMENTS ===== */
+
 .task-card h4 {
   font-size: 18px;
   font-weight: 600;
@@ -744,7 +737,7 @@ button,
   margin-bottom: 8px;
 }
 
-/* ===== RECHARTS RESPONSIVENESS ===== */
+
 .recharts-wrapper {
   max-width: 100%;
 }
@@ -753,7 +746,7 @@ button,
   overflow: visible;
 }
 
-/* ===== MODAL ANIMATIONS ===== */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -782,12 +775,12 @@ button,
   animation: slideUp 0.3s ease-out;
 }
 
-/* ===== NOTIFICATION POPUP ENHANCEMENTS ===== */
+
 .notification-popup {
   animation: slideUp 0.3s ease-out;
 }
 
-/* ===== FOCUS STATES ===== */
+
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
@@ -796,7 +789,7 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* ===== PRINT STYLES ===== */
+
 @media print {
   .app-header,
   .btn,
@@ -816,7 +809,7 @@ select:focus-visible {
   }
 }
 
-/* ===== TRANSITIONS ===== */
+
 .card,
 .btn,
 input,
@@ -825,8 +818,6 @@ select,
 .alert {
   transition: all 0.2s ease;
 }
-
-/* ===== HOVER EFFECTS ===== */
 .task-card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
@@ -836,7 +827,7 @@ select,
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* ===== TEXT SELECTION ===== */
+
 ::selection {
   background-color: rgba(117, 138, 43, 0.3);
   color: var(--text-primary);
@@ -847,7 +838,7 @@ select,
   color: var(--text-primary);
 }
 
-/* ===== ACCESSIBILITY ===== */
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -860,7 +851,7 @@ select,
   border-width: 0;
 }
 
-/* ===== HIGH CONTRAST MODE SUPPORT ===== */
+
 @media (prefers-contrast: high) {
   .card {
     border: 2px solid var(--border-dark);
@@ -877,7 +868,7 @@ select,
   }
 }
 
-/* ===== REDUCED MOTION SUPPORT ===== */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -894,21 +885,19 @@ select,
   }
 }
 
-/* ===== DARK MODE PREPARATION (Optional) ===== */
 @media (prefers-color-scheme: dark) {
-  /* Keep light mode for now, but structure is ready for dark mode */
+
 }
 
-/* ===== GRID LAYOUT IMPROVEMENTS ===== */
+
 .dashboard-grid section {
-  min-width: 0; /* Prevent grid blowout */
+  min-width: 0; 
 }
 
 .dashboard-grid aside {
-  min-width: 0; /* Prevent grid blowout */
+  min-width: 0; 
 }
 
-/* ===== TABLE RESPONSIVE (if needed in future) ===== */
 table {
   width: 100%;
   max-width: 100%;
@@ -922,8 +911,6 @@ table {
     font-size: 14px;
   }
 }
-
-/* ===== FINAL OVERFLOW PREVENTION ===== */
 body,
 html,
 #root,
@@ -936,7 +923,6 @@ html,
   max-width: 100%;
 }
 
-/* Allow specific scrollable containers */
 .modal-card,
 .card,
 textarea,
@@ -945,5 +931,3 @@ textarea,
   overflow-x: hidden;
   overflow-y: auto;
 }
-
-/* ===== END OF APP.CSS ===== */
