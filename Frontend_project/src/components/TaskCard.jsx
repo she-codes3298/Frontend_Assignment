@@ -161,10 +161,10 @@ export default function TaskCard({
               marginTop: "auto",
             }}
           >
-            {/* Developer View Buttons */}
+          
             {!isManager && canModify && (
               <>
-                {/* Close button - only for open/in-progress tasks assigned to current user */}
+            
                 {canClose && (
                   <button
                     className="btn"
@@ -175,7 +175,7 @@ export default function TaskCard({
                   </button>
                 )}
                 
-                {/* Edit button - always available for tasks user can modify */}
+            
                 <button
                   className="btn"
                   onClick={() => onEdit && onEdit(task)}
@@ -184,7 +184,7 @@ export default function TaskCard({
                   Edit
                 </button>
                 
-                {/* Delete button - always available for tasks user can modify */}
+               
                 <button
                   className="btn"
                   onClick={() => onDelete && onDelete(task.firestoreId)}
@@ -195,7 +195,7 @@ export default function TaskCard({
               </>
             )}
 
-            {/* Manager View Buttons */}
+        
             {isManager && task.status === "Pending Approval" && (
               <>
                 <button
