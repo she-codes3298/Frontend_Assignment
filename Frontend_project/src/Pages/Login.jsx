@@ -27,7 +27,7 @@ export default function Login({ onLogin }) {
   return (
     <div className="center-page">
       <form className="card login-card" onSubmit={submit}>
-        <h1 className="title">Task Tracker</h1>
+        <h1 className="title">Bug/Task Tracker</h1>
         <div className="field">
           <label>Username</label>
           <input
