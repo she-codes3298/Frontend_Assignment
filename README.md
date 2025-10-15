@@ -7,7 +7,7 @@ This application allows managers and developers to **create, assign, track, and 
 
 ## 🚀 Live Demo
 
-🔗 **Deployed on Vercel:** [Bug/Task Tracker App](https://frontend-assignment-9tms-git-main-rupali-bhartis-projects.vercel.app/)
+🔗 **Deployed on Vercel:** [Bug/Task Tracker App](https://frontend-assignment-yp2t-git-main-rupali-bhartis-projects.vercel.app/)
   **video demontration link**:https://drive.google.com/file/d/1cmEa7wSzHblwp0f8E-Jpd99CJgVHLWtg/view?usp=sharing
 
 ---
